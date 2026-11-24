@@ -1,0 +1,8 @@
+# В репозиторий попадает только то, что перечислено ниже
+/*
+!/.gitignore
+!/README.md
+!/build.mjs
+!/src/
+!/examples/
+/examples/_frames.json

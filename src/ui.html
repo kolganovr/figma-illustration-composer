@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Токены дизайн-системы Mokido 4.4.0. */
+  :root {
+    --mk-font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mk-font-mono: ui-monospace, "SF Mono", "Roboto Mono", Consolas, monospace;
+    --mk-text-title-13-semibold: 600 13px/18px var(--mk-font-sans);
+    --mk-text-body-12: 400 12px/16px var(--mk-font-sans);
+    --mk-text-body-12-medium: 500 12px/16px var(--mk-font-sans);
+    --mk-text-body-11: 400 11px/16px var(--mk-font-sans);
+    --mk-text-label-11-medium: 500 11px/14px var(--mk-font-sans);
+    --mk-text-label-11-medium-ls: 0.002em;
+    --mk-text-mono-11: 400 11px/16px var(--mk-font-mono);
+    --mk-radius-sm: 4px;
+    --mk-radius-md: 8px;
+    --mk-radius-lg: 12px;
+    --mk-radius-pill: 999px;
+    --mk-bg: #ffffff;
+    --mk-bg-subtle: #f3f0ed;
+    --mk-surface: #faf8f6;
+    --mk-surface-hover: #f3f0ed;
+    --mk-border: #e7e2dd;
+    --mk-border-strong: #d3ccc5;
+    --mk-text: #1d1a18;
+    --mk-text-muted: #635c56;
+    --mk-text-disabled: #aba39b;
+    --mk-accent: #ff957a;
+    --mk-accent-hover: #f7714f;
+    --mk-accent-text: #151311;
+    --mk-accent-subtle: #ffe6de;
+    --mk-accent-fg: #b8411f;
+    --mk-status-ok: #1b6639;
+    --mk-status-ok-bg: #ddf5e6;
+    --mk-status-warn: #8a5b00;
+    --mk-status-warn-bg: #fff1cc;
+    --mk-status-error: #a12a20;
+    --mk-status-error-bg: #ffe1de;
+    --mk-focus: #3b7bf6;
+    --mk-shadow: #1513111a;
+  }
+  html.figma-dark:not([data-theme="light"]), html[data-theme="dark"] {
+    --mk-bg: #1d1a18;
+    --mk-bg-subtle: #151311;
+    --mk-surface: #252220;
+    --mk-surface-hover: #2e2a27;
+    --mk-border: #45403c;
+    --mk-border-strong: #635c56;
+    --mk-text: #faf8f6;
+    --mk-text-muted: #aba39b;
+    --mk-text-disabled: #635c56;
+    --mk-accent: #ff957a;
+    --mk-accent-hover: #ffae97;
+    --mk-accent-text: #151311;
+    --mk-accent-subtle: #5c2210;
+    --mk-accent-fg: #ffae97;
+    --mk-status-ok: #7fd4a0;
+    --mk-status-ok-bg: #12341f;
+    --mk-status-warn: #ffd46b;
+    --mk-status-warn-bg: #3d2c05;
+    --mk-status-error: #ff9b90;
+    --mk-status-error-bg: #45140f;
+    --mk-focus: #8db4ff;
+    --mk-shadow: #00000073;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--mk-bg); color: var(--mk-text);
+    font: var(--mk-text-body-12);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+  button:disabled { cursor: default; opacity: .5; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--mk-focus); outline-offset: 1px; }
+  [hidden] { display: none !important; }
+  svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .Window { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .Header { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--mk-border); }
+  .Header .Segmented { flex: 1; }
+  .Body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .Dock { flex: none; padding: 12px 16px; border-top: 1px solid var(--mk-border); background: var(--mk-bg); display: flex; flex-direction: column; gap: 8px; }
+  .Footer {
+    height: 28px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px;
+    background: var(--mk-bg-subtle); border-top: 1px solid var(--mk-border);
+  }
+  .Trace { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: var(--mk-text-body-11); color: var(--mk-text-muted); }
+  .Trace.err { color: var(--mk-status-error); }
+  .Trace.ok { color: var(--mk-status-ok); }
+
+  .IconButton {
+    width: 28px; height: 28px; flex: none; border-radius: var(--mk-radius-md);
+    display: inline-flex; align-items: center; justify-content: center; color: var(--mk-text);
+  }
+  .IconButton:hover { background: var(--mk-surface-hover); }
+
+  .Group { display: flex; flex-direction: column; gap: 8px; }
+  .GroupHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .GroupTitle { font: var(--mk-text-label-11-medium); letter-spacing: var(--mk-text-label-11-medium-ls); color: var(--mk-text-muted); text-transform: uppercase; }
+  .GroupHint { font: var(--mk-text-body-11); color: var(--mk-text-muted); text-align: right; }
+  .Meta { font: var(--mk-text-body-11); color: var(--mk-text-muted); }
+
+  .Segmented { display: flex; padding: 2px; gap: 2px; border-radius: var(--mk-radius-md); background: var(--mk-bg-subtle); min-width: 0; }
+  .Segmented button {
+    flex: 1 1 auto; min-width: 0; height: 24px; padding: 0 6px; border-radius: var(--mk-radius-sm);
+    font: var(--mk-text-body-12-medium); color: var(--mk-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .Segmented button:hover { color: var(--mk-text); }
+  .Segmented button[aria-pressed="true"] { background: var(--mk-bg); color: var(--mk-text); box-shadow: 0 1px 2px var(--mk-shadow); }
+  .Header .Segmented button { height: 28px; font: var(--mk-text-title-13-semibold); font-size: 12px; }
+
+  .TextInput, .TextArea {
+    width: 100%; padding: 0 8px; border-radius: var(--mk-radius-md);
+    border: 1px solid var(--mk-border); background: var(--mk-bg); color: var(--mk-text); font: var(--mk-text-body-12);
+  }
+  .TextInput { height: 28px; }
+  .TextArea { padding: 8px; min-height: 64px; resize: vertical; line-height: 18px; }
+  .TextInput:focus, .TextArea:focus { outline: none; border-color: var(--mk-focus); }
+  .TextInput::placeholder, .TextArea::placeholder { color: var(--mk-text-disabled); }
+  .InputRow { display: flex; align-items: center; gap: 8px; }
+  .InputRow .TextInput { flex: 1; min-width: 0; }
+  .InputRow .x { color: var(--mk-text-muted); }
+
+  .Button {
+    height: 28px; padding: 0 10px; gap: 6px; flex: none; border-radius: var(--mk-radius-md);
+    display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    font: var(--mk-text-body-12-medium); color: var(--mk-text);
+  }
+  .Button svg.i { width: 14px; height: 14px; }
+  .Button.primary { background: var(--mk-accent); color: var(--mk-accent-text); }
+  .Button.primary:hover:not(:disabled) { background: var(--mk-accent-hover); }
+  .Button.secondary { background: var(--mk-surface); box-shadow: inset 0 0 0 1px var(--mk-border); }
+  .Button.secondary:hover:not(:disabled), .Button.ghost:hover:not(:disabled) { background: var(--mk-surface-hover); }
+  .Button.ghost { color: var(--mk-text-muted); }
+  .Button.wide { width: 100%; height: 32px; font: var(--mk-text-title-13-semibold); }
+  .Button.grow { flex: 1 1 0; min-width: 0; }
+  .ButtonsRow { display: flex; gap: 8px; }
+
+  .SettingRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+  .SettingText { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .SettingName { font: var(--mk-text-body-12-medium); }
+  .SettingHint { font: var(--mk-text-body-11); color: var(--mk-text-muted); }
+  .Toggle { flex: none; width: 32px; height: 18px; padding: 2px; border-radius: var(--mk-radius-pill); background: var(--mk-border-strong); }
+  .Toggle::after { content: ""; display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--mk-surface); transition: transform 0.15s; }
+  .Toggle[aria-checked="true"] { background: var(--mk-accent); }
+  .Toggle[aria-checked="true"]::after { transform: translateX(14px); }
+
+  /* Объекты: чипы. main = в сцене, bg = фоновым. */
+  .Chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .Chip {
+    height: 26px; padding: 0 10px; border-radius: var(--mk-radius-pill); display: inline-flex; align-items: center; gap: 4px;
+    font: var(--mk-text-body-12-medium); color: var(--mk-text); background: var(--mk-bg); box-shadow: inset 0 0 0 1px var(--mk-border);
+  }
+  .Chip:hover { background: var(--mk-surface-hover); }
+  .Chip.main { background: var(--mk-accent-subtle); box-shadow: inset 0 0 0 1px var(--mk-accent); color: var(--mk-text); }
+  .Chip.bg { background: transparent; box-shadow: none; outline: 1.5px dashed var(--mk-accent); outline-offset: -1.5px; color: var(--mk-text); }
+  .Chip .n { font: var(--mk-text-label-11-medium); color: var(--mk-accent-fg); }
+  .Chip.bg .n { color: var(--mk-accent-fg); }
+  .Chip.picked { background: var(--mk-accent-subtle); box-shadow: inset 0 0 0 1px var(--mk-accent); }
+  .Chip.picked svg.i { width: 12px; height: 12px; stroke-width: 2; color: var(--mk-accent-fg); }
+  .Chip.static { cursor: default; }
+  .Chip.static:hover { background: inherit; }
+
+  /* Сцена в "По объектам": строка на объект, явный выбор "главный / фоном". */
+  .Scene { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: var(--mk-radius-lg); background: var(--mk-surface); border: 1px solid var(--mk-border); }
+  .SceneHead { display: flex; justify-content: space-between; padding: 0 4px; font: var(--mk-text-label-11-medium); color: var(--mk-text-muted); }
+  .SceneRow { display: flex; align-items: center; gap: 8px; padding: 2px 2px 2px 4px; min-width: 0; }
+  .SceneRow .Num { flex: none; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font: var(--mk-text-label-11-medium); background: var(--mk-bg-subtle); color: var(--mk-text-muted); }
+  .SceneRow .Num.hero { background: var(--mk-accent); color: var(--mk-accent-text); }
+  .SceneRow .Name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--mk-text-body-12-medium); }
+  .SceneRow .Segmented { flex: none; }
+  .SceneRow .Segmented button { height: 22px; padding: 0 8px; font-size: 11px; }
+  .SceneRow .Segmented button:disabled { opacity: .4; cursor: not-allowed; }
+  .SceneRow .IconButton { width: 24px; height: 24px; }
+  .Note { display: flex; gap: 8px; padding: 8px 10px; border-radius: var(--mk-radius-md); font: var(--mk-text-body-11); }
+  .Note.soft { background: var(--mk-status-warn-bg); color: var(--mk-text); }
+  .Note.info { background: var(--mk-surface); box-shadow: inset 0 0 0 1px var(--mk-border); color: var(--mk-text-muted); }
+  .Note .LinkBtn { color: var(--mk-accent-fg); font: var(--mk-text-body-11); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Формат кадра: карточки с силуэтом пропорции. */
+  .Formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .Formats button {
+    min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px 6px;
+    border-radius: var(--mk-radius-md); background: var(--mk-bg); box-shadow: inset 0 0 0 1px var(--mk-border);
+    font: var(--mk-text-body-11); color: var(--mk-text-muted); font-variant-numeric: tabular-nums;
+  }
+  .Formats button:hover { background: var(--mk-surface-hover); }
+  .Formats button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--mk-accent); color: var(--mk-text); background: var(--mk-surface); }
+  .Formats .Shape { height: 28px; display: flex; align-items: center; justify-content: center; }
+  .Formats .Shape i { display: block; border-radius: 3px; background: var(--mk-bg-subtle); border: 1px solid var(--mk-border-strong); }
+  .Formats button[aria-pressed="true"] .Shape i { background: var(--mk-accent-subtle); border-color: var(--mk-accent); }
+
+  .Palettes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .Pal {
+    position: relative; padding: 3px; border-radius: var(--mk-radius-md); box-shadow: inset 0 0 0 1px var(--mk-border); background: var(--mk-bg);
+  }
+  .Pal[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--mk-accent); }
+  .Pal .Sw { display: grid; grid-template-columns: repeat(4, 12px); grid-template-rows: 12px 12px; border-radius: var(--mk-radius-sm); overflow: hidden; }
+  .Pal .Del {
+    position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--mk-surface); box-shadow: inset 0 0 0 1px var(--mk-border-strong); color: var(--mk-text-muted);
+    display: none; align-items: center; justify-content: center;
+  }
+  .Pal:hover .Del, .Pal:focus-within .Del { display: inline-flex; }
+  .Pal .Del svg.i { width: 10px; height: 10px; stroke-width: 2; }
+  .Pal.add { width: 54px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--mk-text-muted); box-shadow: inset 0 0 0 1px var(--mk-border-strong); border: 0; }
+  .PalAction { font: var(--mk-text-body-11); color: var(--mk-text-muted); }
+  .PalAction.live { color: var(--mk-text); padding: 6px 8px; border-radius: var(--mk-radius-md); background: var(--mk-accent-subtle); }
+  .PalAction b { font-weight: 600; }
+  .Pal.add:hover { color: var(--mk-text); background: var(--mk-surface-hover); }
+  .Card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--mk-radius-lg); background: var(--mk-surface); border: 1px solid var(--mk-border); }
+
+  /* Варианты 2 x 2 */
+  .Thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .Thumb {
+    position: relative; min-width: 0; border-radius: var(--mk-radius-md); overflow: hidden;
+    background: var(--mk-bg-subtle); box-shadow: inset 0 0 0 1px var(--mk-border);
+    display: flex; align-items: center; justify-content: center; padding: 2px;
+  }
+  .Thumb img { display: block; max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+  .Thumb[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--mk-accent); }
+  .Thumb .Tag {
+    position: absolute; left: 6px; top: 6px; padding: 1px 6px; border-radius: var(--mk-radius-pill);
+    font: var(--mk-text-label-11-medium); background: var(--mk-bg); color: var(--mk-text); box-shadow: 0 1px 2px var(--mk-shadow);
+  }
+  .Thumb .Tag.best { background: var(--mk-accent); color: var(--mk-accent-text); }
+  .Thumb.loading { aspect-ratio: 1; }
+  .Thumbs.busy { opacity: .35; pointer-events: none; transition: opacity .15s; }
+  .Progress { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--mk-radius-md); background: var(--mk-accent-subtle); font: var(--mk-text-body-12-medium); color: var(--mk-text); }
+  .Progress .Bar { flex: 1; height: 4px; border-radius: 2px; background: var(--mk-bg); overflow: hidden; }
+  .Progress .Bar i { display: block; height: 100%; background: var(--mk-accent); transition: width .2s; }
+
+  .Spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Настройки поверх окна */
+  .Settings { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--mk-bg); z-index: 5; }
+  .SettingsHeader { height: 44px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid var(--mk-border); }
+  .SettingsTitle { flex: 1; font: var(--mk-text-title-13-semibold); }
+  .Field { display: flex; flex-direction: column; gap: 4px; }
+  .FieldLabel { font: var(--mk-text-label-11-medium); letter-spacing: var(--mk-text-label-11-medium-ls); color: var(--mk-text-muted); }
+  .KeyCard { display: flex; align-items: center; gap: 8px; }
+  .Pill { flex: none; padding: 2px 8px; border-radius: var(--mk-radius-pill); font: var(--mk-text-label-11-medium); background: var(--mk-bg-subtle); color: var(--mk-text-muted); }
+  .Pill.ok { background: var(--mk-status-ok-bg); color: var(--mk-status-ok); }
+  .Pill.warn { background: var(--mk-status-warn-bg); color: var(--mk-status-warn); }
+  .Problems { margin: 0; padding-left: 16px; font: var(--mk-text-body-11); color: var(--mk-text-muted); }
+  .Mono { font: var(--mk-text-mono-11); }
+</style>
+</head>
+<body>
+<div class="Window">
+  <header class="Header">
+    <div class="Segmented" id="modeSeg" role="tablist">
+      <button data-v="meaning" aria-pressed="true">По смыслу</button>
+      <button data-v="objects" aria-pressed="false">По объектам</button>
+    </div>
+    <button class="IconButton" id="openSettings" title="Настройки">
+      <svg class="i" viewBox="0 0 16 16"><path d="M6.88 2.87C7.16 1.70 8.83 1.70 9.11 2.87C9.15 3.05 9.24 3.21 9.36 3.35C9.47 3.49 9.62 3.59 9.79 3.66C9.96 3.73 10.14 3.76 10.32 3.75C10.50 3.73 10.67 3.68 10.83 3.58C11.86 2.96 13.03 4.13 12.41 5.16C12.31 5.32 12.26 5.49 12.24 5.67C12.23 5.85 12.26 6.03 12.33 6.20C12.40 6.37 12.50 6.52 12.64 6.63C12.78 6.75 12.94 6.84 13.12 6.88C14.29 7.16 14.29 8.83 13.12 9.11C12.94 9.15 12.78 9.24 12.64 9.36C12.50 9.47 12.40 9.62 12.33 9.79C12.26 9.96 12.23 10.14 12.24 10.32C12.26 10.50 12.31 10.67 12.41 10.83C13.03 11.86 11.860 13.03 10.83 12.41C10.67 12.31 10.50 12.26 10.32 12.24C10.14 12.23 9.96 12.26 9.79 12.33C9.62 12.40 9.47 12.50 9.36 12.64C9.24 12.78 9.15 12.94 9.11 13.12C8.83 14.29 7.16 14.29 6.88 13.12C6.84 12.94 6.75 12.78 6.63 12.64C6.52 12.50 6.37 12.40 6.20 12.33C6.03 12.26 5.85 12.23 5.67 12.24C5.49 12.26 5.32 12.31 5.16 12.41C4.13 13.03 2.96 11.86 3.58 10.83C3.68 10.67 3.73 10.50 3.75 10.32C3.76 10.14 3.73 9.96 3.66 9.79C3.59 9.62 3.49 9.47 3.35 9.36C3.21 9.24 3.05 9.15 2.87 9.11C1.70 8.83 1.70 7.16 2.87 6.88C3.05 6.84 3.21 6.75 3.35 6.63C3.49 6.52 3.59 6.37 3.66 6.20C3.73 6.03 3.76 5.85 3.75 5.67C3.73 5.49 3.68 5.32 3.58 5.16C2.96 4.13 4.13 2.96 5.16 3.58C5.83 3.99 6.69 3.63 6.88 2.87Z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+  </header>
+
+  <main class="Body" id="body">
+    <div class="Note soft" id="libNote" hidden></div>
+
+    <!-- Сценарий 1 -->
+    <section class="Group" id="meaningBox">
+      <div class="GroupHead"><span class="GroupTitle">Метафора или заголовок</span></div>
+      <textarea class="TextArea" id="meaning" rows="3" placeholder="Например: как не потерять деньги, когда учишься инвестировать"></textarea>
+      <div class="SettingRow">
+        <div class="SettingText">
+          <span class="SettingName">Второстепенные объекты фоном</span>
+          <span class="SettingHint">Кроме главного, у кого есть фоновая версия</span>
+        </div>
+        <button class="Toggle" id="useBg" role="switch" aria-checked="true" aria-label="Второстепенные объекты фоном"></button>
+      </div>
+      <div id="pickOut" class="Group" hidden></div>
+    </section>
+
+    <!-- Сценарий 2 -->
+    <section class="Group" id="objectsBox" hidden>
+      <div class="GroupHead">
+        <span class="GroupTitle">Объекты</span>
+        <span class="GroupHint">нажмите, чтобы добавить в сцену</span>
+      </div>
+      <div class="Chips" id="chips"></div>
+      <div class="Scene" id="sceneList" hidden></div>
+    </section>
+
+    <section class="Group">
+      <div class="GroupHead"><span class="GroupTitle">Формат кадра</span></div>
+      <div class="Formats" id="formats">
+        <button data-v="1000x1000" aria-pressed="true"><span class="Shape"><i style="width:24px;height:24px"></i></span>1000×1000</button>
+        <button data-v="1200x630" aria-pressed="false"><span class="Shape"><i style="width:30px;height:16px"></i></span>1200×630</button>
+        <button data-v="800x1200" aria-pressed="false"><span class="Shape"><i style="width:18px;height:27px"></i></span>800×1200</button>
+        <button data-v="custom" aria-pressed="false"><span class="Shape"><i style="width:24px;height:20px;border-style:dashed"></i></span>Свой</button>
+      </div>
+      <div class="InputRow" id="customSize" hidden>
+        <input class="TextInput" id="cw" type="text" inputmode="numeric" placeholder="Ширина" value="1600">
+        <span class="x">×</span>
+        <input class="TextInput" id="ch" type="text" inputmode="numeric" placeholder="Высота" value="900">
+      </div>
+    </section>
+
+    <section class="Group">
+      <div class="GroupHead">
+        <span class="GroupTitle">Размер объектов</span>
+        <span class="GroupHint" id="sizeHint"></span>
+      </div>
+      <div class="Segmented" id="sizeSeg">
+        <button data-v="auto" aria-pressed="true">Авто</button>
+        <button data-v="L" aria-pressed="false">L, крупные</button>
+        <button data-v="S" aria-pressed="false">S, мелкие</button>
+      </div>
+    </section>
+
+    <section class="Group">
+      <div class="GroupHead"><span class="GroupTitle">Раскладка</span></div>
+      <div class="Segmented" id="layoutSeg">
+        <button data-v="cluster" aria-pressed="true">Собранно</button>
+        <button data-v="offset" aria-pressed="false">Со смещением</button>
+        <button data-v="title" aria-pressed="false">Под заголовок</button>
+      </div>
+      <div class="SettingRow">
+        <span class="SettingName">Декор фона</span>
+        <button class="Toggle" id="decor" role="switch" aria-checked="true" aria-label="Декор фона"></button>
+      </div>
+    </section>
+
+    <section class="Group">
+      <div class="GroupHead">
+        <span class="GroupTitle">Палитра</span>
+        <span class="GroupHint" id="palName"></span>
+      </div>
+      <div class="Palettes" id="palettes"></div>
+      <div class="PalAction" id="palAction"></div>
+      <div class="Card" id="palForm" hidden>
+        <span class="Meta">8 цветов по порядку: фон 1, фон 2, фон 3, тёмный, объект 1, объект 2, объект 3, светлый. Или JSON с полями bg1...paper.</span>
+        <textarea class="TextArea" id="palText" rows="2" placeholder="#E3F2FD #90CAF9 #1E88E5 #181817 #FFF59D #FF8A80 #FFCCBC #FFFFFF"></textarea>
+        <input class="TextInput" id="palTitle" type="text" placeholder="Название, можно не писать">
+        <div class="ButtonsRow">
+          <button class="Button primary" id="palAdd">Добавить</button>
+          <button class="Button secondary" id="palFromSel">Взять из выделения</button>
+          <button class="Button ghost" id="palCancel">Отмена</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="Group" id="results" hidden>
+      <div class="GroupHead">
+        <span class="GroupTitle">Варианты</span>
+        <span class="GroupHint">клик выбирает вариант</span>
+      </div>
+      <div class="Progress" id="progress" hidden><span class="Spinner"></span><span id="progressText"></span><span class="Bar"><i id="progressBar" style="width:0"></i></span></div>
+      <div class="Thumbs" id="thumbs"></div>
+      <div class="ButtonsRow">
+        <button class="Button secondary grow" id="keep">Оставить выбранный</button>
+        <button class="Button ghost" id="judge" title="Gemini сравнит варианты по превью">
+          <svg class="i" viewBox="0 0 16 16"><path d="M8 2l1.4 3.6L13 7l-3.6 1.4L8 12 6.6 8.4 3 7l3.6-1.4z"/></svg>ИИ выбрать лучший
+        </button>
+      </div>
+    </section>
+
+    <section class="Group">
+      <div class="GroupHead">
+        <span class="GroupTitle">Выделенный кадр</span>
+        <span class="GroupHint">первый из выделенных</span>
+      </div>
+      <div class="ButtonsRow">
+        <button class="Button secondary grow" id="svg">
+          <svg class="i" viewBox="0 0 16 16"><path d="M8 2.5v8M4.5 7.5L8 11l3.5-3.5M3 13.5h10"/></svg>Скачать SVG
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="Dock">
+    <button class="Button primary wide" id="go">Собрать 4 варианта</button>
+  </div>
+  <footer class="Footer"><span class="Trace" id="trace">Читаю библиотеку...</span></footer>
+
+  <!-- Настройки -->
+  <div class="Settings" id="settings" hidden>
+    <div class="SettingsHeader">
+      <button class="IconButton" id="closeSettings" title="Назад">
+        <svg class="i" viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg>
+      </button>
+      <span class="SettingsTitle">Настройки</span>
+    </div>
+    <div class="Body">
+      <section class="Group">
+        <span class="GroupTitle">Ключ Gemini</span>
+        <div class="KeyCard"><span class="Pill" id="keyPill"></span><span class="Meta" id="keyInfo"></span></div>
+        <div class="Field">
+          <label class="FieldLabel" for="apiKey">Свой ключ, можно не вписывать</label>
+          <input class="TextInput" id="apiKey" type="password" placeholder="AIza..." autocomplete="off">
+        </div>
+        <div class="Field">
+          <label class="FieldLabel" for="visionModel">Модель для распознавания объектов</label>
+          <input class="TextInput" id="visionModel" type="text" placeholder="gemini-3.5-flash-lite">
+        </div>
+        <span class="Meta">Подбор по смыслу и выбор лучшего варианта: <span class="Mono">gemini-decision-1</span>. Без ключа и без сети подбор идёт по словам из смыслов объектов.</span>
+        <div class="ButtonsRow"><button class="Button primary" id="saveSettings">Сохранить</button></div>
+      </section>
+      <section class="Group">
+        <span class="GroupTitle">Библиотека</span>
+        <span class="Meta" id="libInfo"></span>
+        <ul class="Problems" id="problems" hidden></ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="pick.js"></script>
+<script>
+const EMBEDDED_KEY = '__EMBEDDED_KEY__';
+const EMBEDDED_UNTIL = '__EMBEDDED_KEY_UNTIL__';
+const API = 'https://generativelanguage.googleapis.com/v1beta';
+const SLOTS = ['bg1', 'bg2', 'bg3', 'ink', 'obj1', 'obj2', 'obj3', 'paper'];
+const N_VARIANTS = 4;
+const GEMINI_TIMEOUT_MS = 30000;
+const P = window.PICK;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const state = {
+  lib: null, settings: {}, mode: 'meaning', size: 'auto', layout: 'cluster', format: '1000x1000', palette: null,
+  picked: [], // сценарий 2, чипы: [{ key, state }] в порядке клика
+  scene: null, // сценарий 1, последний подбор
+  previews: [], chosen: null, lastText: '', busy: false,
+  sel: { frames: 0, ours: 0, palette: null }, // выделение на холсте (code.js, selectionchange)
+  composeReq: null, // reqId текущей сборки, для строки прогресса
+};
+
+// ---------- Связь с code.js ----------
+let reqSeq = 0;
+const pending = {};
+function call(type, data = {}) {
+  const reqId = ++reqSeq;
+  if (type === 'compose') state.composeReq = reqId;
+  parent.postMessage({ pluginMessage: { type, reqId, ...data } }, '*');
+  return new Promise((resolve, reject) => { pending[reqId] = { resolve, reject }; });
+}
+window.onmessage = (e) => {
+  const m = e.data && e.data.pluginMessage;
+  if (!m) return;
+  if (m.type === 'selection') { state.sel = m; renderPalAction(); return; }
+  // Прогресс сборки не закрывает запрос, только обновляет строку.
+  if (m.type === 'progress') { if (m.reqId === state.composeReq) showProgress(m); return; }
+  if (!pending[m.reqId]) return;
+  const p = pending[m.reqId]; delete pending[m.reqId];
+  m.ok ? p.resolve(m) : p.reject(new Error(m.error));
+};
+function say(t, kind) { $('trace').textContent = t || ''; $('trace').className = 'Trace' + (kind ? ' ' + kind : ''); $('trace').title = t || ''; }
+
+// ---------- Gemini ----------
+const embeddedKey = () => (EMBEDDED_KEY.startsWith('__') ? '' : EMBEDDED_KEY);
+const apiKey = () => (state.settings.apiKey || '').trim() || embeddedKey();
+
+async function gemini(path, body) {
+  const key = apiKey();
+  if (!key) throw new Error('нет ключа Gemini');
+  let r;
+  // Без таймаута медленный ответ выглядел как зависшее окно: через 30 с бросаем, подбор идёт по словам.
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), GEMINI_TIMEOUT_MS);
+  try {
+    r = await fetch(`${API}/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body), signal: ctl.signal });
+  } catch (e) {
+    throw new Error(ctl.signal.aborted ? `Gemini не ответил за ${GEMINI_TIMEOUT_MS / 1000} с` : 'нет связи с Gemini');
+  } finally { clearTimeout(timer); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = (j.error && j.error.message) || r.status;
+    if (r.status === 429) throw new Error('лимит запросов Gemini исчерпан');
+    if (r.status === 400 && /key/i.test(msg)) throw new Error('ключ Gemini не принят');
+    throw new Error('Gemini: ' + msg);
+  }
+  return j;
+}
+
+// Объекты, которые можно предлагать: с именем или со смыслами.
+const pickable = () => state.lib.objects.filter((o) => o.tags.length || !o.needsTags);
+const libObj = (key) => state.lib.objects.find((o) => o.key === key);
+
+// Сценарий 1: один запрос Decisions через pick.js, при любой ошибке запасной подбор по словам.
+async function pickByMeaning(text) {
+  const objs = pickable();
+  let scene, fallback = '';
+  try {
+    const json = await gemini('decisions', P.buildDecisionsRequest(text, objs));
+    scene = P.parseDecisionsResponse(json, objs);
+    if (!scene.ok) throw new Error(scene.error || 'пустой ответ');
+  } catch (e) {
+    fallback = e.message;
+    scene = P.offlinePick(text, objs);
+  }
+  scene.items = scene.items.filter((k) => libObj(k));
+  if (!scene.items.length) scene.items = objs.slice(0, 2).map((o) => o.key);
+  scene.fallback = fallback;
+  return scene;
+}
+
+function sceneToItems(scene) {
+  const useBg = $('useBg').getAttribute('aria-checked') === 'true';
+  return scene.items.map((k, i) => ({ key: k, state: i > 0 && useBg && libObj(k).hasBg ? 'bg' : 'main' }));
+}
+
+// Арт-директор: превью вариантов картинками, выбор лучшего.
+async function judge(previews, text) {
+  const ids = 'ABCD'.slice(0, previews.length).split('');
+  const input = [{ type: 'text', text: `Иллюстрация к заголовку: ${text || 'без заголовка'}. Ниже варианты композиции.` }];
+  previews.forEach((p, i) => {
+    input.push({ type: 'text', text: `Вариант ${ids[i]}:` });
+    input.push({ type: 'image', data: p.png, mime_type: 'image/png', resolution: 'low' });
+  });
+  const crit = {};
+  ids.forEach((id) => { crit[id] = 'вариант ' + id; });
+  const j = await gemini('decisions', {
+    model: P.DECISIONS_MODEL, input,
+    questions: { best: {
+      type: 'choice', criteria: crit,
+      instructions: 'Какой вариант композиции лучше как готовая иллюстрация: сцена сбалансирована, предметы не перекрывают друг друга некрасиво, важное не обрезано краем кадра, смысл заголовка читается?',
+    } },
+  });
+  return { ids, best: (j.answers || {}).best || {} };
+}
+
+// Безымянные объекты: модель смотрит на картинку и даёт имя и смыслы.
+async function nameObjects(keys) {
+  const { previews } = await call('object-previews', { keys });
+  const model = (state.settings.visionModel || '').trim() || P.FLASH_MODEL;
+  const out = [];
+  for (const p of previews) {
+    const j = await gemini(`models/${model}:generateContent`, {
+      contents: [{ parts: [
+        { inline_data: { mime_type: 'image/png', data: p.png } },
+        { text: 'Это объект из библиотеки иллюстраций. Назови предмет по-русски (1-3 слова, с большой буквы) и дай 6-8 смыслов, которые он может передавать в иллюстрации к статье. Ответ JSON: {"label": "...", "tags": ["...", ...]}' },
+      ] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+    });
+    const t = j.candidates && j.candidates[0].content.parts.map((x) => x.text).join('');
+    const parsed = P.safeJson(t);
+    if (parsed && parsed.label) out.push({ key: p.key, label: parsed.label, tags: parsed.tags || [] });
+  }
+  return out;
+}
+
+// ---------- Отрисовка ----------
+function renderLib() {
+  const L = state.lib;
+  const unnamed = L.objects.filter((o) => o.needsTags);
+  $('libInfo').textContent = `${L.objects.length} объектов, размеры ${L.sizes.join(' и ')}, палитр ${L.palettes.length}.`;
+  $('problems').hidden = !L.problems.length;
+  // Одинаковые строки схлопываем: "... (2 шт.)". Плагин учитывает такие детали при сборке, файл не трогает.
+  const cnt = {}; L.problems.forEach((p) => { cnt[p] = (cnt[p] || 0) + 1; });
+  $('problems').innerHTML = Object.entries(cnt).map(([p, n]) => `<li>${esc(p.replace(/, приклеена к ней$/, ', плагин считает её частью объекта'))}${n > 1 ? ` (${n} шт.)` : ''}</li>`).join('');
+  const note = $('libNote');
+  const parts = [];
+  if (!L.objects.length) parts.push('В этом файле нет библиотеки объектов. Плагин ищет на страницах файла секции "Размер L" и "Размер S" с группами объектов и образцами палитр. Откройте файл с библиотекой или скопируйте эти секции сюда и перезапустите плагин.');
+  if (unnamed.length) parts.push(`Объектов без имени: ${unnamed.length}. <button class="LinkBtn" id="nameBtn">Распознать по картинке</button>`);
+  if (L.problems.length) parts.push(`Замечаний к библиотеке: ${L.problems.length}, файл не менялся. <button class="LinkBtn" id="probBtn">Подробнее</button>`);
+  note.hidden = !parts.length;
+  note.innerHTML = `<div>${parts.join('<br>')}</div>`;
+  const nb = $('nameBtn'); if (nb) nb.onclick = runNaming;
+  const pb = $('probBtn'); if (pb) pb.onclick = () => { $('settings').hidden = false; };
+  renderChips(); renderPalettes(); renderSizeHint();
+}
+
+// Сценарий 2: чип добавляет объект в сцену (или убирает), в списке сцены у каждого явный выбор "Главный / Фоном".
+// Первый в списке - герой сцены.
+function renderChips() {
+  const box = $('chips'); box.innerHTML = '';
+  for (const o of state.lib.objects) {
+    const b = document.createElement('button');
+    const pk = state.picked.some((p) => p.key === o.key);
+    b.className = 'Chip' + (pk ? ' picked' : '');
+    b.setAttribute('aria-pressed', String(pk));
+    b.innerHTML = (pk ? '<svg class="i" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg>' : '') + esc(o.label);
+    b.onclick = () => {
+      const j = state.picked.findIndex((p) => p.key === o.key);
+      if (j < 0) state.picked.push({ key: o.key, state: 'main' }); else state.picked.splice(j, 1);
+      renderChips(); renderSizeHint();
+    };
+    box.appendChild(b);
+  }
+  renderScene();
+}
+
+function renderScene() {
+  const box = $('sceneList');
+  box.hidden = !state.picked.length;
+  if (!state.picked.length) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="SceneHead"><span>В сцене</span><span>как показать</span></div>' + state.picked.map((p, i) => {
+    const o = libObj(p.key);
+    return `<div class="SceneRow" data-i="${i}">
+      <span class="Num${i === 0 ? ' hero' : ''}" title="${i === 0 ? 'Герой сцены' : ''}">${i + 1}</span>
+      <span class="Name">${esc(o.label)}</span>
+      <div class="Segmented" role="radiogroup">
+        <button data-st="main" aria-pressed="${p.state === 'main'}">Главный</button>
+        <button data-st="bg" aria-pressed="${p.state === 'bg'}" ${o.hasBg ? '' : 'disabled title="У этого объекта нет фоновой версии"'}>Фоном</button>
+      </div>
+      <button class="IconButton" data-rm title="Убрать из сцены"><svg class="i" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.SceneRow').forEach((row) => {
+    const i = +row.dataset.i;
+    row.querySelectorAll('[data-st]').forEach((b) => { b.onclick = () => { state.picked[i].state = b.dataset.st; renderScene(); }; });
+    row.querySelector('[data-rm]').onclick = () => { state.picked.splice(i, 1); renderChips(); renderSizeHint(); };
+  });
+}
+
+function renderPickOut(scene) {
+  const out = $('pickOut');
+  if (!scene) { out.hidden = true; return; }
+  const items = sceneToItems(scene);
+  const pOf = (k) => { const r = (scene.ranked || []).find((x) => x.key === k); return r ? r.pChoice != null ? r.pChoice : r.p : null; };
+  const chips = items.map((it, i) => {
+    const p = pOf(it.key);
+    const pct = !scene.offline && p != null ? ` <span class="n">${Math.round(p * 100)}%</span>` : '';
+    return `<span class="Chip static ${it.state}">${i === 0 ? '<span class="n">главный</span> ' : ''}${esc(libObj(it.key).label)}${it.state === 'bg' ? ' <span class="n">фон</span>' : ''}${pct}</span>`;
+  }).join('');
+  let note = '';
+  if (scene.fallback) note = `<div class="Note info">Gemini не ответил (${esc(scene.fallback)}), подобрал по словам из смыслов объектов.</div>`;
+  else if (scene.noFit) note = `<div class="Note soft">Gemini не очень уверен (${Math.round(scene.maxP * 100)}%): возможно, точного объекта под этот смысл в библиотеке нет. Если выбор не тот, поправьте во вкладке "По объектам".</div>`;
+  out.hidden = false;
+  out.innerHTML = `<div class="Chips">${chips}</div>${note}`;
+}
+
+function renderPalettes() {
+  const box = $('palettes'); box.innerHTML = '';
+  if (!state.palette || !state.lib.palettes.find((p) => p.id === state.palette)) state.palette = state.lib.source;
+  for (const p of state.lib.palettes) {
+    const b = document.createElement('button');
+    b.className = 'Pal';
+    b.setAttribute('aria-pressed', String(p.id === state.palette));
+    b.title = p.name + (p.id === state.lib.source ? ', исходная' : '');
+    b.innerHTML = `<div class="Sw">${SLOTS.map((s) => `<div style="background:${esc(p.colors[s])}"></div>`).join('')}</div>`;
+    b.onclick = () => choosePalette(p.id);
+    if (!p.builtin) {
+      const x = document.createElement('span');
+      x.className = 'Del'; x.title = 'Удалить палитру'; x.setAttribute('role', 'button');
+      x.innerHTML = '<svg class="i" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+      x.onclick = async (e) => {
+        e.stopPropagation();
+        try { const r = await call('remove-palette', { id: p.id }); state.lib = r.lib; renderPalettes(); say('Палитра удалена'); } catch (er) { say(er.message, 'err'); }
+      };
+      b.appendChild(x);
+    }
+    box.appendChild(b);
+  }
+  const add = document.createElement('button');
+  add.className = 'Pal add'; add.title = 'Своя палитра';
+  add.innerHTML = '<svg class="i" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>';
+  add.onclick = () => { $('palForm').hidden = !$('palForm').hidden; };
+  box.appendChild(add);
+  const cur = state.lib.palettes.find((p) => p.id === state.palette);
+  $('palName').textContent = cur ? cur.name : '';
+  renderPalAction();
+  $('libInfo').textContent = `${state.lib.objects.length} объектов, размеры ${state.lib.sizes.join(' и ')}, палитр ${state.lib.palettes.length}.`;
+}
+
+// Что сделает клик по палитре: подпись под палитрами меняется по выделению на холсте.
+function renderPalAction() {
+  const el = $('palAction');
+  if (!el || !state.lib) return;
+  const n = state.sel.frames || 0;
+  if (n) {
+    el.className = 'PalAction live';
+    el.innerHTML = `Клик по палитре перекрасит <b>${n} ${plural(n, 'выделенный кадр', 'выделенных кадра', 'выделенных кадров')}</b> на холсте`;
+  } else {
+    el.className = 'PalAction';
+    el.textContent = 'В этой палитре соберутся новые варианты. Чтобы перекрасить готовый кадр, выделите его на холсте и нажмите палитру.';
+  }
+}
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+}
+
+async function choosePalette(id) {
+  state.palette = id; renderPalettes();
+  if (!state.sel.frames || state.busy) return;
+  const name = (state.lib.palettes.find((p) => p.id === id) || {}).name || '';
+  say('Перекрашиваю...');
+  try {
+    const r = await call('recolor', { palette: id, refresh: state.previews.map((p) => p.id) });
+    // Превью перекрашенных вариантов обновляем, чтобы окно не показывало старые цвета.
+    (r.previews || []).forEach((np) => { const p = state.previews.find((x) => x.id === np.id); if (p) p.png = np.png; });
+    renderThumbs();
+    if (r.failed && r.failed.length) say(`Перекрашено ${r.count}, не вышло: ${r.failed.join('; ')}`, 'err');
+    else say(`Перекрашено в "${name}": ${r.count} ${plural(r.count, 'кадр', 'кадра', 'кадров')}`, 'ok');
+  } catch (e) { say(e.message, 'err'); }
+}
+
+function formatWH(strict) {
+  if (state.format === 'custom') {
+    const w = parseInt($('cw').value, 10), h = parseInt($('ch').value, 10);
+    if (!(w >= 100 && h >= 100 && w <= 8000 && h <= 8000)) {
+      if (strict) throw new Error('Свой размер: ширина и высота от 100 до 8000');
+      return null;
+    }
+    return [w, h];
+  }
+  return state.format.split('x').map(Number);
+}
+
+// Подсказка к "Авто": то же правило, что autoSize в code.js.
+function currentCount() {
+  if (state.mode === 'objects') return state.picked.length;
+  return state.scene ? state.scene.items.length : 0;
+}
+function renderSizeHint() {
+  const wh = formatWH(false);
+  if (state.size !== 'auto' || !wh) { $('sizeHint').textContent = ''; return; }
+  const n = currentCount();
+  const small = Math.min(wh[0], wh[1]) < 600 || n >= 4;
+  $('sizeHint').textContent = small ? (n >= 4 ? 'сейчас S: 4+ объекта' : 'сейчас S: кадр меньше 600') : 'сейчас L';
+}
+
+function renderThumbs() {
+  $('results').hidden = !state.previews.length;
+  const box = $('thumbs'); box.innerHTML = '';
+  const wh = formatWH(false) || [1, 1];
+  state.previews.forEach((p, i) => {
+    const d = document.createElement('button');
+    d.className = 'Thumb';
+    d.style.aspectRatio = (p.W || wh[0]) + ' / ' + (p.H || wh[1]);
+    d.setAttribute('aria-pressed', String(state.chosen === p.id));
+    d.title = p.name || '';
+    d.innerHTML = `<img alt="Вариант ${i + 1}" src="data:image/png;base64,${p.png}"><span class="Tag${p.best ? ' best' : ''}">${p.best ? 'Лучший' : i + 1}${p.pr != null ? ' ' + p.pr + '%' : ''}</span>`;
+    d.onclick = () => { state.chosen = p.id; renderThumbs(); };
+    box.appendChild(d);
+  });
+  const ci = state.previews.findIndex((p) => p.id === state.chosen);
+  $('keep').textContent = state.previews.length > 1 && ci >= 0 ? `Оставить только ${ci + 1}` : 'Оставить выбранный';
+  $('keep').disabled = state.previews.length < 2;
+  $('keep').title = 'Остальные варианты удалятся с холста';
+}
+
+function showProgress(m) {
+  const t = m.stage === 'previews' ? 'Готовлю превью...' : `Собираю вариант ${m.done + 1} из ${m.total}`;
+  $('progressText').textContent = t;
+  $('progressBar').style.width = Math.round(((m.stage === 'previews' ? m.total : m.done) / m.total) * 100) + '%';
+  setBusy(true, t); say(t + '. Figma занята сборкой, окно может не двигаться.');
+}
+function setCompose(on) {
+  $('results').hidden = !on && !state.previews.length;
+  $('progress').hidden = !on;
+  $('thumbs').classList.toggle('busy', on);
+  if (on) { $('progressText').textContent = 'Начинаю сборку...'; $('progressBar').style.width = '0'; $('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+function setBusy(b, label) {
+  state.busy = b;
+  const g = $('go');
+  g.disabled = b;
+  g.innerHTML = b ? `<span class="Spinner"></span>${esc(label || '')}` : `Собрать ${N_VARIANTS} варианта`;
+}
+
+function segmented(id, key, cb) {
+  $(id).querySelectorAll('button').forEach((b) => {
+    b.onclick = () => {
+      $(id).querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      state[key] = b.dataset.v; if (cb) cb();
+    };
+  });
+}
+function toggle(id, cb) {
+  $(id).onclick = () => { const on = $(id).getAttribute('aria-checked') !== 'true'; $(id).setAttribute('aria-checked', String(on)); if (cb) cb(on); };
+}
+
+// ---------- Действия ----------
+async function go() {
+  if (state.busy) return;
+  try {
+    let items;
+    const [W, H] = formatWH(true);
+    if (state.mode === 'meaning') {
+      const text = $('meaning').value.trim();
+      if (!text) { $('meaning').focus(); throw new Error('Впишите метафору или заголовок'); }
+      setBusy(true, 'Подбираю объекты...'); say('Gemini подбирает объекты...');
+      state.scene = await pickByMeaning(text);
+      state.lastText = text;
+      renderPickOut(state.scene); renderSizeHint();
+      items = sceneToItems(state.scene);
+    } else {
+      items = state.picked.map(({ key, state: st }) => ({ key, state: st }));
+      if (!items.length) throw new Error('Выберите объекты: нажмите на названия выше');
+      state.lastText = items.map((i) => libObj(i.key).label).join(', ');
+    }
+    setBusy(true, 'Собираю...'); say('Собираю варианты на холсте...');
+    setCompose(true);
+    // layout.js: seeds 0..3 дают 4 разных варианта, 4..7 следующие 4 и т.д. Повторная сборка той же сцены берёт следующую четвёрку.
+    const sceneKey = JSON.stringify([items, W, H, state.layout, state.size]);
+    state.round = sceneKey === state.lastScene ? (state.round || 0) + 1 : 0;
+    state.lastScene = sceneKey;
+    const variants = Array.from({ length: N_VARIANTS }, (_, i) => ({ seed: (state.round % 4) * N_VARIANTS + i }));
+    let r;
+    try {
+      r = await call('compose', {
+        spec: { size: state.size, W, H, layout: state.layout, palette: state.palette, items, decor: $('decor').getAttribute('aria-checked') === 'true' },
+        variants,
+      });
+    } finally { state.composeReq = null; setCompose(false); }
+    state.previews = r.previews.map((p) => ({ ...p, W, H }));
+    state.chosen = state.previews[0].id;
+    renderThumbs();
+    say(`Готово: ${state.previews.length} варианта на холсте`, 'ok');
+    $('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (e) { say(e.message, 'err'); }
+  setBusy(false);
+}
+
+async function runJudge() {
+  if (state.previews.length < 2) return say('Нужно хотя бы 2 варианта', 'err');
+  $('judge').disabled = true; say('Gemini сравнивает варианты...');
+  try {
+    const { ids, best } = await judge(state.previews, state.lastText);
+    state.previews.forEach((p, i) => {
+      const pr = best.probabilities ? best.probabilities[ids[i]] : null;
+      p.best = best.choice === ids[i];
+      p.pr = pr != null ? Math.round(pr * 100) : null;
+    });
+    const bi = ids.indexOf(best.choice);
+    if (bi >= 0) state.chosen = state.previews[bi].id;
+    renderThumbs();
+    say(bi >= 0 ? `Gemini выбрал вариант ${bi + 1}` : 'Gemini не смог выбрать', bi >= 0 ? 'ok' : 'err');
+  } catch (e) { say('Не вышло: ' + e.message, 'err'); }
+  $('judge').disabled = false;
+}
+
+async function runNaming() {
+  say('Распознаю объекты по картинке...');
+  try {
+    const keys = state.lib.objects.filter((o) => o.needsTags).map((o) => o.key);
+    const tags = await nameObjects(keys);
+    const r = await call('save-tags', { tags });
+    state.lib = r.lib; renderLib();
+    say('Распознано: ' + tags.map((t) => t.label).join(', '), 'ok');
+  } catch (e) { say('Не вышло: ' + e.message, 'err'); }
+}
+
+function parsePalette(text) {
+  const t = text.trim();
+  if (t.startsWith('{')) {
+    const j = P.safeJson(t) || {};
+    const c = {}; SLOTS.forEach((s) => { c[s] = String(j[s] || '').toUpperCase(); });
+    if (SLOTS.some((s) => !/^#[0-9A-F]{6}$/.test(c[s]))) throw new Error('В JSON нужны все 8 цветов: ' + SLOTS.join(', '));
+    return c;
+  }
+  const hexes = (t.match(/#?[0-9a-fA-F]{6}\b/g) || []).map((h) => '#' + h.replace('#', '').toUpperCase());
+  if (hexes.length !== 8) throw new Error(`Нужно ровно 8 цветов, нашёл ${hexes.length}`);
+  const c = {}; SLOTS.forEach((s, i) => { c[s] = hexes[i]; });
+  return c;
+}
+
+function renderKeyInfo() {
+  const own = (state.settings.apiKey || '').trim();
+  const emb = embeddedKey();
+  const until = EMBEDDED_UNTIL && !EMBEDDED_UNTIL.startsWith('__') ? EMBEDDED_UNTIL : '';
+  const pill = $('keyPill');
+  if (own) { pill.className = 'Pill ok'; pill.textContent = 'Свой'; $('keyInfo').textContent = 'Используется ваш ключ.'; }
+  else if (emb) { pill.className = 'Pill ok'; pill.textContent = 'Встроенный'; $('keyInfo').textContent = until ? `Работает до ${until}, потом нужен свой.` : 'Можно вписать свой.'; }
+  else { pill.className = 'Pill warn'; pill.textContent = 'Нет ключа'; $('keyInfo').textContent = 'ИИ-функции выключены, сборка работает.'; }
+}
+
+// ---------- Запуск ----------
+segmented('modeSeg', 'mode', () => {
+  $('meaningBox').hidden = state.mode !== 'meaning';
+  $('objectsBox').hidden = state.mode !== 'objects';
+  renderSizeHint();
+});
+segmented('sizeSeg', 'size', renderSizeHint);
+segmented('layoutSeg', 'layout');
+segmented('formats', 'format', () => { $('customSize').hidden = state.format !== 'custom'; renderSizeHint(); });
+toggle('useBg', () => { if (state.scene) renderPickOut(state.scene); });
+toggle('decor');
+$('cw').oninput = renderSizeHint; $('ch').oninput = renderSizeHint;
+$('meaning').onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) go(); };
+$('go').onclick = go;
+$('judge').onclick = runJudge;
+$('openSettings').onclick = () => { $('settings').hidden = false; };
+$('closeSettings').onclick = () => { $('settings').hidden = true; };
+$('keep').onclick = async () => {
+  if (!state.chosen) return;
+  try {
+    await call('keep', { keep: state.chosen, remove: state.previews.filter((p) => p.id !== state.chosen).map((p) => p.id) });
+    state.previews = state.previews.filter((p) => p.id === state.chosen); renderThumbs(); say('Оставлен выбранный вариант', 'ok');
+  } catch (e) { say(e.message, 'err'); }
+};
+$('svg').onclick = async () => {
+  try {
+    const r = await call('export-svg');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([r.svg], { type: 'image/svg+xml' }));
+    a.download = r.name; a.click();
+    say('SVG сохранён: ' + r.name, 'ok');
+  } catch (e) { say(e.message, 'err'); }
+};
+$('palAdd').onclick = async () => {
+  try {
+    const colors = parsePalette($('palText').value);
+    const r = await call('add-palette', { colors, name: $('palTitle').value.trim() });
+    state.lib = r.lib; state.palette = r.id; $('palForm').hidden = true; $('palText').value = ''; $('palTitle').value = '';
+    renderPalettes(); say('Палитра добавлена', 'ok');
+  } catch (e) { say(e.message, 'err'); }
+};
+$('palFromSel').onclick = async () => {
+  try { const r = await call('palette-from-selection'); $('palText').value = SLOTS.map((s) => r.colors[s]).join(' '); say('Цвета взяты из выделения'); }
+  catch (e) { say(e.message, 'err'); }
+};
+$('palCancel').onclick = () => { $('palForm').hidden = true; };
+$('saveSettings').onclick = async () => {
+  state.settings = { apiKey: $('apiKey').value.trim(), visionModel: $('visionModel').value.trim() };
+  try { await call('save-settings', { settings: state.settings }); renderKeyInfo(); say('Настройки сохранены', 'ok'); $('settings').hidden = true; }
+  catch (e) { say(e.message, 'err'); }
+};
+
+renderKeyInfo();
+call('init').then((r) => {
+  state.lib = r.lib; state.settings = r.settings || {};
+  if (r.selection) state.sel = r.selection;
+  $('apiKey').value = state.settings.apiKey || ''; $('visionModel').value = state.settings.visionModel || '';
+  renderLib(); renderKeyInfo();
+  if (state.lib.objects.length) say(`Библиотека: ${state.lib.objects.length} объектов, палитр ${state.lib.palettes.length}`);
+  else say('Библиотека объектов в этом файле не найдена', 'err');
+}).catch((e) => { say('Не нашёл библиотеку: ' + e.message, 'err'); });
+</script>
+</body>
+</html>
